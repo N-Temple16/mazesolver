@@ -12,18 +12,19 @@ class Maze:
         self._cell_size_x = cell_size_x
         self._cell_size_y = cell_size_y
         self._win = win
-        self.seed = seed
-
-        if seed is not None:
+        if seed:
             random.seed(seed)
 
         self._create_cells()
+        self._break_entrance_and_exit()
+        self._break_walls_r(0, 0)
+        self._reset_cells_visited()
     
-    def _create_cells(self):        
-        for col in range(self._num_cols):
+    def _create_cells(self):
+        for i in range(self._num_cols):
             col_cells = []
-            for row in range(self._num_rows):
-                col_cells.append(Cell(self._win))            
+            for j in range(self._num_rows):
+                col_cells.append(Cell(self._win))
             self._cells.append(col_cells)
         for i in range(self._num_cols):
             for j in range(self._num_rows):
@@ -57,40 +58,42 @@ class Maze:
     
     def _break_walls_r(self, i, j):
         self._cells[i][j].visited = True
-
         while True:
-            possible_directions = []
+            next_index_list = []
 
-            if i > 0 and not self._cells[i-1][j].visited:
-                possible_directions.append((i-1, j, "up"))
-            
-            if j < self._num_cols - 1 and not self._cells[i][j+1].visited:
-                possible_directions.append((i, j+1, "right"))
-                
-            if i < self._num_rows - 1 and not self._cells[i+1][j].visited:
-                possible_directions.append((i+1, j, "down"))
-                
-            if j > 0 and not self._cells[i][j-1].visited:
-                possible_directions.append((i, j-1, "left"))
+            if i > 0 and not self._cells[i - 1][j].visited:
+                next_index_list.append((i - 1, j))
+            if i < self._num_cols - 1 and not self._cells[i + 1][j].visited:
+                next_index_list.append((i + 1, j))
+            if j > 0 and not self._cells[i][j - 1].visited:
+                next_index_list.append((i, j - 1))
+            if j < self._num_rows - 1 and not self._cells[i][j + 1].visited:
+                next_index_list.append((i, j + 1))
 
-            if len(possible_directions) == 0:
+            if len(next_index_list) == 0:
                 self._draw_cell(i, j)
                 return
-            
-            new_i, new_j, direction = random.choice(possible_directions)
 
-            if direction == "up":
-                self._cells[i][j].has_top_wall = False
-                self._cells[new_i][new_j].has_bottom_wall = False
-            elif direction == "right":
+            direction_index = random.randrange(len(next_index_list))
+            next_index = next_index_list[direction_index]
+
+            if next_index[0] == i + 1:
                 self._cells[i][j].has_right_wall = False
-                self._cells[new_i][new_j].has_left_wall = False
-            elif direction == "down":
-                self._cells[i][j].has_bottom_wall = False
-                self._cells[new_i][new_j].has_top_wall = False
-            elif direction == "left":
+                self._cells[i + 1][j].has_left_wall = False
+            if next_index[0] == i - 1:
                 self._cells[i][j].has_left_wall = False
-                self._cells[new_i][new_j].has_right_wall = False
-            
-            self._break_walls_r(new_i, new_j)
+                self._cells[i - 1][j].has_right_wall = False
+            if next_index[1] == j + 1:
+                self._cells[i][j].has_bottom_wall = False
+                self._cells[i][j + 1].has_top_wall = False
+            if next_index[1] == j - 1:
+                self._cells[i][j].has_top_wall = False
+                self._cells[i][j - 1].has_bottom_wall = False
+
+            self._break_walls_r(next_index[0], next_index[1])
+        
+    def _reset_cells_visited(self):
+        for coll in self._cells:
+            for cell in coll:
+                cell.visited = False
 
