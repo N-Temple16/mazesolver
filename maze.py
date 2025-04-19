@@ -96,4 +96,39 @@ class Maze:
         for coll in self._cells:
             for cell in coll:
                 cell.visited = False
+    
+    def solve(self):
+        return self._solve_r(0, 0)
+    
+    def _solve_r(self, i, j):
+        self._animate()
+        self._cells[i][j].visited = True
+
+        if i == self._num_cols-1 and j == self._num_rows-1:
+            return True
+        
+        directions = [(0, -1), (1, 0), (0, 1), (-1, 0)]
+
+        for di, dj in directions:
+            ni, nj = i + di, j + dj
+
+            if 0 <= ni < self._num_cols and 0 <= nj < self._num_rows:
+                wall_exists = False
+                if di == 0 and dj == -1:
+                    wall_exists = self._cells[i][j].has_top_wall
+                elif di == 1 and dj == 0:
+                    wall_exists = self._cells[i][j].has_right_wall
+                elif di == 0 and dj == 1:
+                    wall_exists = self._cells[i][j].has_bottom_wall
+                elif di == -1 and dj == 0:
+                    wall_exists = self._cells[i][j].has_left_wall
+
+                if self._cells[ni][nj].visited == False and wall_exists == False:
+                    self._cells[i][j].draw_move(self._cells[ni][nj]) 
+                    if self._solve_r(ni, nj):
+                        return True
+                    else:
+                        self._cells[i][j].draw_move(self._cells[ni][nj], True)
+        
+        return False
 
